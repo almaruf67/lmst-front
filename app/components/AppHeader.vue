@@ -47,12 +47,28 @@
             @click.stop="toggleMenu"
             type="button"
           >
-            AK
+            <img
+              v-if="avatarUrl"
+              :src="avatarUrl"
+              alt="User avatar"
+              class="h-10 w-10 rounded-full object-cover"
+            />
+            <span v-else class="text-sm font-semibold uppercase">
+              {{ initials || 'LM' }}
+            </span>
           </button>
           <div
             v-if="showMenu"
             class="absolute right-0 mt-2 w-40 rounded-2xl border border-border bg-card py-1 text-sm shadow-lg shadow-black/20"
           >
+            <div class="border-b border-border px-4 py-3 text-left">
+              <p class="text-sm font-semibold text-foreground">
+                {{ userName }}
+              </p>
+              <p v-if="userEmail" class="text-[11px] text-foreground-muted">
+                {{ userEmail }}
+              </p>
+            </div>
             <NuxtLink
               to="/profile"
               class="block px-4 py-2 text-foreground hover:bg-surface-muted"
@@ -75,6 +91,10 @@
 </template>
 
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia';
+
+import { useAuthStore } from '~/stores/auth';
+
 const props = defineProps<{
   collapsed: boolean;
   colorMode: 'light' | 'dark';
@@ -90,6 +110,10 @@ const showMenu = ref(false);
 const userMenuAnchor = ref<HTMLElement | null>(null);
 
 const route = useRoute();
+const authStore = useAuthStore();
+const { avatarUrl, initials, profile } = storeToRefs(authStore);
+const userName = computed(() => profile.value?.name ?? 'Account');
+const userEmail = computed(() => profile.value?.email ?? '');
 const pageTitle = computed(() => {
   if (route.path.startsWith('/students')) return 'Roster';
   if (route.path.startsWith('/attendance')) return 'Attendance';
