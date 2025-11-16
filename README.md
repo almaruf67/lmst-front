@@ -1,75 +1,70 @@
-# Nuxt Minimal Starter
+# LMST Frontend (Nuxt 4 + TypeScript)
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Nuxt 4 SPA with Pinia, Tailwind, and Axios. Backend base URL comes from runtime config. Build UI first using mocks; wire API at the end.
 
-## Setup
-
-Make sure to install dependencies:
+## Quick Start
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+pnpm dev    # http://localhost:3009
 ```
 
-## Development Server
-
-Start the development server on `http://localhost:3000`:
+## Scripts
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+pnpm build         # Production build
+pnpm preview       # Preview on port 3009
+pnpm lint          # ESLint
+pnpm lint:fix      # ESLint with --fix
+pnpm typecheck     # vue-tsc (SFC type checks)
+pnpm type-check    # tsc (TS project only)
+pnpm format        # Prettier write
+pnpm format:check  # Prettier check
 ```
 
-## Production
+## Runtime Config
 
-Build the application for production:
+- Env var: `NUXT_PUBLIC_API_BASE` (default: `http://localhost:8000/api/v1`)
+- Example:
+  ```ts
+  const {
+    public: { apiBase },
+  } = useRuntimeConfig();
+  const { data } = await axios.get(`${apiBase}/students`);
+  ```
 
-```bash
-# npm
-npm run build
+## Project Structure
 
-# pnpm
-pnpm build
+- `app/pages/**` (file-based routing)
+- `app/layouts/**` (default layout)
+- `app/components/**` (auto-imported)
+- `app/composables/**` (auto-imported, useXxx naming)
+- `app/stores/**` (Pinia stores)
+- `app/plugins/**` (client/server plugins)
+- `app/assets/**` (Tailwind entry at `assets/css/main.css`)
 
-# yarn
-yarn build
+## 3–5 Hour Frontend Plan (API last)
 
-# bun
-bun run build
-```
+1. Shell (15m): ensure Tailwind `app/assets/css/main.css`; minimal layout in `app/layouts/default.vue`.
+2. Students (45–60m): `app/pages/students/index.vue` + `useStudents()` + mock service + client pagination.
+3. Attendance (60–75m): `app/pages/attendance/index.vue` + Pinia store for bulk state + percentage calc.
+4. Dashboard (30–45m): `app/pages/dashboard/index.vue` + simple cards + basic chart.
+5. API swap (30–45m): replace mocks with axios using `apiBase`; add basic error toasts.
 
-Locally preview production build:
+### Suggested Files
 
-```bash
-# npm
-npm run preview
+- Pages: students, attendance, dashboard
+- Composables: `useStudents.ts`, `useAttendance.ts`
+- Store: `app/stores/attendance.ts`
+- Components: `StudentList.vue`, `AttendanceToolbar.vue`
+- Mocks: `app/utils/mock/{students.ts,attendance.ts}`
 
-# pnpm
-pnpm preview
+## API Targets
 
-# yarn
-yarn preview
+- Students: `GET /students?class=&section=`, `POST /students`, `GET /students/:id`
+- Attendance: `POST /attendance/bulk`, `GET /reports/monthly?month=...`, `GET /dashboard/summary`
 
-# bun
-bun run preview
-```
+## Notes
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Dev/preview run on port 3009 (configured in `package.json`).
+- Build all URLs from `runtimeConfig.public.apiBase` to switch environments cleanly.

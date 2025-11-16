@@ -18,3 +18,4 @@ pnpm-lock.yaml
 *.swo
 coverage
 .nyc_output
+app/assets/css/main.css
