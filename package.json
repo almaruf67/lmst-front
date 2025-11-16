@@ -1,0 +1,38 @@
+{
+  "name": "lmst-front",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev --port 3009",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview --port 3009",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "typecheck": "npx vue-tsc --noEmit",
+    "clean": "sudo rm -rf .nuxt",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@nuxt/image": "^1.11.0",
+    "@pinia/nuxt": "^0.11.3",
+    "axios": "^1.13.2",
+    "lodash-es": "^4.17.21",
+    "nuxt": "^4.2.1",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.24",
+    "vue-router": "^4.6.3"
+  },
+  "packageManager": "pnpm@10.20.0+sha512.cf9998222162dd85864d0a8102e7892e7ba4ceadebbf5a31f9c2fce48dfce317a9c53b9f6464d1ef9042cba2e02ae02a9f7c143a2b438cd93c91840f0192b9dd",
+  "devDependencies": {
+    "@nuxt/typescript": "^2.8.1",
+    "@nuxtjs/tailwindcss": "7.0.0-beta.1",
+    "@types/lodash-es": "^4.17.12",
+    "@types/node": "^22.19.1",
+    "tailwindcss": "^4.1.17",
+    "typescript": "^5.9.3"
+  }
+}
