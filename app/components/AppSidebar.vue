@@ -40,19 +40,6 @@
         <span v-if="!collapsed" class="truncate text-sm">{{ item.label }}</span>
       </button>
     </nav>
-
-    <div class="border-t border-border px-2.5 py-4 lg:px-3">
-      <button
-        class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-muted hover:bg-surface-muted hover:text-foreground transition-colors duration-200"
-        :class="collapsed ? 'justify-center' : ''"
-        @click="$emit('toggle')"
-      >
-        <span class="text-xl shrink-0" aria-hidden="true">
-          {{ collapsed ? '›' : '‹' }}
-        </span>
-        <span v-if="!collapsed">Collapse</span>
-      </button>
-    </div>
   </aside>
 </template>
 
