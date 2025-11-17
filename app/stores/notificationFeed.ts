@@ -282,7 +282,7 @@ export const useNotificationFeedStore = defineStore('notification-feed', () => {
   watch(
     () => authStore.profile?.id,
     () => {
-      if (!process.client) {
+      if (!import.meta.client) {
         return;
       }
 

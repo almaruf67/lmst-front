@@ -1,1 +1,1 @@
-/// <reference path="../layouts.d.ts" />
+import '../layouts.d.ts';

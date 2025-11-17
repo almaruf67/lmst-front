@@ -185,7 +185,7 @@ import { storeToRefs } from 'pinia';
 import { useAuthStore } from '~/stores/auth';
 import { useNotificationFeedStore } from '~/stores/notificationFeed';
 
-const props = defineProps<{
+defineProps<{
   collapsed: boolean;
   colorMode: 'light' | 'dark';
 }>();

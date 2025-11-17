@@ -1,11 +1,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 
-import {
-  useNotificationFeedStore,
-  type NotificationItem,
-  type NotificationPriority,
-} from '~/stores/notificationFeed';
+import { useNotificationFeedStore } from '~/stores/notificationFeed';
 
 export const useNotificationCenter = () => {
   const feedStore = useNotificationFeedStore();

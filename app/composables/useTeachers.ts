@@ -4,7 +4,6 @@ import { mapApiUser } from '~/composables/useAdmins';
 import { useApi } from '~/composables/useApi';
 import type {
   ApiUser,
-  ManagedUser,
   PaginatedMeta,
   PaginatedUsersResponse,
 } from '~/types/users';

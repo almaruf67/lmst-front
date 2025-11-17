@@ -5,22 +5,24 @@ import { unref } from 'vue';
 
 import { useAuthStore } from '~/stores/auth';
 
+type NuxtEcho = Echo<'reverb'>;
+
 declare global {
   interface Window {
-    Echo: Echo<any>;
+    Echo: NuxtEcho;
     Pusher: typeof Pusher;
   }
 }
 
 declare module '#app' {
   interface NuxtApp {
-    $echo?: Echo<any>;
+    $echo?: NuxtEcho;
   }
 }
 
 declare module 'vue' {
   interface ComponentCustomProperties {
-    $echo?: Echo<any>;
+    $echo?: NuxtEcho;
   }
 }
 

@@ -68,7 +68,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken.value = accessCookie.value ?? null;
     refreshToken.value = refreshCookie.value ?? null;
 
-    if (process.client) {
+    if (import.meta.client) {
       try {
         const cached = localStorage.getItem(USER_CACHE_KEY);
         if (cached) {
@@ -85,7 +85,7 @@ export const useAuthStore = defineStore('auth', () => {
   hydrateFromCookies();
 
   const persistUser = (payload: Nullable<AuthUser>) => {
-    if (!process.client) {
+    if (!import.meta.client) {
       return;
     }
 

@@ -46,7 +46,7 @@
 <script lang="ts" setup>
 import { sidebarNavItems } from './sidebarItems';
 
-const props = defineProps<{ collapsed: boolean; isDesktop: boolean }>();
+defineProps<{ collapsed: boolean; isDesktop: boolean }>();
 defineEmits<{ (e: 'toggle'): void }>();
 
 const navItems = sidebarNavItems;

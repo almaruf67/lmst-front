@@ -18,14 +18,18 @@
 const colorMode = useState<'light' | 'dark'>('color-mode', () => 'light');
 
 const syncDocumentClass = (mode: 'light' | 'dark') => {
-  if (process.client) {
-    document.documentElement.classList.toggle('dark', mode === 'dark');
-    localStorage.setItem('lmst-color-mode', mode);
+  if (!import.meta.client) {
+    return;
   }
+
+  document.documentElement.classList.toggle('dark', mode === 'dark');
+  localStorage.setItem('lmst-color-mode', mode);
 };
 
 onMounted(() => {
-  if (!process.client) return;
+  if (!import.meta.client) {
+    return;
+  }
   const stored = localStorage.getItem('lmst-color-mode');
   if (stored === 'dark' || stored === 'light') {
     colorMode.value = stored;

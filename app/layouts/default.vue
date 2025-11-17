@@ -33,19 +33,30 @@ const isDesktop = ref(true);
 const { logout } = useAuth();
 
 const updateIsDesktop = () => {
-  if (!process.client) return;
+  if (!import.meta.client) {
+    return;
+  }
+
   isDesktop.value = window.matchMedia('(min-width: 1024px)').matches;
 };
 
-if (process.client) {
+if (import.meta.client) {
   updateIsDesktop();
 }
 
 onMounted(() => {
+  if (!import.meta.client) {
+    return;
+  }
+
   window.addEventListener('resize', updateIsDesktop);
 });
 
 onBeforeUnmount(() => {
+  if (!import.meta.client) {
+    return;
+  }
+
   window.removeEventListener('resize', updateIsDesktop);
 });
 
