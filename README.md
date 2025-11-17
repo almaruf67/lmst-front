@@ -18,6 +18,8 @@ pnpm lint          # ESLint
 pnpm lint:fix      # ESLint with --fix
 pnpm typecheck     # vue-tsc (SFC type checks)
 pnpm type-check    # tsc (TS project only)
+pnpm test          # Vitest component/composable suite
+pnpm test:watch    # Vitest watch mode
 pnpm format        # Prettier write
 pnpm format:check  # Prettier check
 ```
@@ -28,6 +30,7 @@ pnpm format:check  # Prettier check
 - `pnpm preview` – serve the production build locally for smoke testing.
 - `pnpm lint` – run ESLint using the repo config.
 - `pnpm typecheck` – execute `vue-tsc` to validate SFC types before commits.
+- `pnpm test` – run the Vitest-powered component suite so regressions are caught before wiring up APIs.
 
 ## Runtime Config
 
