@@ -1,5 +1,5 @@
 <template>
-  <div class="flex min-h-screen bg-surface-muted text-foreground">
+  <div class="flex h-screen bg-surface-muted text-foreground">
     <AppSidebarMobile :open="isMobileSidebarOpen" @close="closeMobileSidebar" />
     <AppSidebar
       :collapsed="isSidebarCollapsed"
