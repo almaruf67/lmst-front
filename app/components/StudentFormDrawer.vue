@@ -226,10 +226,6 @@ const props = defineProps<{
   initial?: StudentListItem | null;
   classOptions: string[];
   sectionOptions: string[];
-  id: number;
-  name: string;
-  class_name?: string | null;
-  section?: string | null;
   teacherOptions: Array<{
     id: number;
     name: string;

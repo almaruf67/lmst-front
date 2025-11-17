@@ -57,14 +57,24 @@
 </template>
 
 <script lang="ts" setup>
-import { sidebarNavItems } from './sidebarItems';
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
+
+import { resolveSidebarNavItems } from './sidebarItems';
+import { useAuthStore } from '~/stores/auth';
 
 const { open } = defineProps<{ open: boolean }>();
 const emit = defineEmits<{ (e: 'close'): void }>();
 
+const authStore = useAuthStore();
+const { profile } = storeToRefs(authStore);
+
+const navItems = computed(() =>
+  resolveSidebarNavItems(profile.value?.user_type ?? null)
+);
+
 const router = useRouter();
 const route = useRoute();
-const navItems = sidebarNavItems;
 
 const isActive = (to: string) => route.path.startsWith(to);
 
