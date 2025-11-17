@@ -23,27 +23,6 @@ export type NotificationItem = {
   context?: Record<string, unknown> | null;
 };
 
-const FALLBACK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'seed-1',
-    title: 'Attendance Recorded',
-    message: 'Class 5A submitted attendance for today.',
-    created_at: new Date().toISOString(),
-    priority: 'high',
-    audience: 'teacher',
-    context: { class_name: '5', section: 'A' },
-  },
-  {
-    id: 'seed-2',
-    title: 'Report Ready',
-    message: 'The monthly attendance report finished exporting.',
-    created_at: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-    priority: 'medium',
-    audience: 'admin',
-    context: null,
-  },
-];
-
 const resolvePriority = (
   payload: Record<string, unknown>
 ): NotificationPriority => {
@@ -153,8 +132,8 @@ export const useNotificationFeedStore = defineStore('notification-feed', () => {
             normalizeNotification(item as Record<string, unknown>)
           )
         );
-      } else if (!notifications.value.length) {
-        setNotifications([...FALLBACK_NOTIFICATIONS]);
+      } else {
+        notifications.value = [];
       }
     } catch (cause) {
       error.value = resolveApiErrorMessage(
@@ -162,10 +141,6 @@ export const useNotificationFeedStore = defineStore('notification-feed', () => {
         'Unable to load notifications'
       );
       console.error('Failed to load notifications', cause);
-
-      if (!notifications.value.length) {
-        setNotifications([...FALLBACK_NOTIFICATIONS]);
-      }
     } finally {
       loading.value = false;
       initialized.value = true;
