@@ -22,9 +22,18 @@ pnpm format        # Prettier write
 pnpm format:check  # Prettier check
 ```
 
+## Core Dev Commands
+
+- `pnpm dev` – hot-reload dev server on port 3009.
+- `pnpm preview` – serve the production build locally for smoke testing.
+- `pnpm lint` – run ESLint using the repo config.
+- `pnpm typecheck` – execute `vue-tsc` to validate SFC types before commits.
+
 ## Runtime Config
 
-- Env var: `NUXT_PUBLIC_API_BASE` (default: `http://localhost:8000/api/v1`)
+- `NUXT_PUBLIC_API_BASE` – REST endpoint root (default `http://localhost:8000/api/v1`).
+- `NUXT_PUBLIC_ASSET_BASE` – Absolute origin for media/assets served outside `/api` (default `http://localhost:8000`).
+- `NUXT_PUBLIC_WS_URL` – Websocket/Reverb endpoint placeholder (default `ws://localhost:6001`).
 - Example:
   ```ts
   const {
@@ -32,6 +41,18 @@ pnpm format:check  # Prettier check
   } = useRuntimeConfig();
   const { data } = await axios.get(`${apiBase}/students`);
   ```
+
+## Environment & Shell Checklist
+
+- Create a `.env` file and set `NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_ASSET_BASE`, and `NUXT_PUBLIC_WS_URL` for your environment (defaults provided in `.env`).
+- Tailwind entry lives at `app/assets/css/main.css` with the design tokens that power the UI kit.
+- The app shell is defined inside `app/layouts/default.vue`, which wires the sidebar, header, and page container used by every view.
+
+## Shared Infrastructure
+
+- Axios is configured globally via `app/plugins/api.ts`; consume it through the `useApi()` composable so headers, retries, and auth handling stay consistent.
+- Authenticated requests automatically attach the bearer token, retry once after refresh, and redirect to `/login` when the session expires.
+- All fatal/network errors surface through the Pinia notification store (`app/stores/notifications.ts`), giving the UI a single toast pipeline to subscribe to.
 
 ## Project Structure
 

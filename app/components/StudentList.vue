@@ -9,10 +9,14 @@
         >
           <tr>
             <th class="px-6 py-4">Student</th>
-            <th class="px-6 py-4">Student ID</th>
-            <th class="px-6 py-4">Class / Section</th>
-            <th class="px-6 py-4">Primary Teacher</th>
-            <th class="px-6 py-4">Last Updated</th>
+            <th v-if="columns.studentId" class="px-6 py-4">Student ID</th>
+            <th v-if="columns.classSection" class="px-6 py-4">
+              Class / Section
+            </th>
+            <th v-if="columns.primaryTeacher" class="px-6 py-4">
+              Primary Teacher
+            </th>
+            <th v-if="columns.lastUpdated" class="px-6 py-4">Last Updated</th>
             <th class="px-6 py-4 text-right">Actions</th>
           </tr>
         </thead>
@@ -82,10 +86,13 @@
                   </div>
                 </div>
               </td>
-              <td class="px-6 py-4 font-mono text-sm text-foreground">
+              <td
+                v-if="columns.studentId"
+                class="px-6 py-4 font-mono text-sm text-foreground"
+              >
                 {{ student.studentCode }}
               </td>
-              <td class="px-6 py-4">
+              <td v-if="columns.classSection" class="px-6 py-4">
                 <p class="font-medium text-foreground">
                   {{ student.className ? `Class ${student.className}` : '—' }}
                 </p>
@@ -97,14 +104,37 @@
                   }}
                 </p>
               </td>
-              <td class="px-6 py-4 text-foreground">
+              <td
+                v-if="columns.primaryTeacher"
+                class="px-6 py-4 text-foreground"
+              >
                 {{ student.primaryTeacher ?? 'Not assigned' }}
               </td>
-              <td class="px-6 py-4 text-foreground-muted">
+              <td
+                v-if="columns.lastUpdated"
+                class="px-6 py-4 text-foreground-muted"
+              >
                 {{ formatAbsolute(student.updatedAt) }}
               </td>
               <td class="px-6 py-4 text-right">
-                <button class="btn-secondary text-xs px-3 py-1.5">View</button>
+                <div class="inline-flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    class="btn-secondary px-3 py-1.5 text-xs"
+                    :disabled="actionBusy"
+                    @click="handleEdit(student)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary px-3 py-1.5 text-xs text-destructive"
+                    :disabled="actionBusy"
+                    @click="handleDelete(student)"
+                  >
+                    Delete
+                  </button>
+                </div>
               </td>
             </tr>
             <tr v-if="students.length === 0">
@@ -158,8 +188,35 @@ const props = defineProps<{
   page: number;
   pageSize: number;
   loading?: boolean;
+  actionLoading?: boolean;
+  columns?: {
+    studentId: boolean;
+    classSection: boolean;
+    primaryTeacher: boolean;
+    lastUpdated: boolean;
+  };
 }>();
-const emit = defineEmits<{ (e: 'change-page', page: number): void }>();
+const emit = defineEmits<{
+  (e: 'change-page', page: number): void;
+  (e: 'edit-student', student: StudentListItem): void;
+  (e: 'delete-student', student: StudentListItem): void;
+}>();
+
+const loading = computed(() => props.loading ?? false);
+
+const columns = computed(
+  () =>
+    props.columns ?? {
+      studentId: true,
+      classSection: true,
+      primaryTeacher: true,
+      lastUpdated: true,
+    }
+);
+
+const actionBusy = computed(
+  () => loading.value || Boolean(props.actionLoading)
+);
 
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(props.total / props.pageSize))
@@ -229,5 +286,11 @@ const changePage = (next: number) => {
   emit('change-page', safePage);
 };
 
-const loading = computed(() => props.loading ?? false);
+const handleEdit = (student: StudentListItem) => {
+  emit('edit-student', student);
+};
+
+const handleDelete = (student: StudentListItem) => {
+  emit('delete-student', student);
+};
 </script>
