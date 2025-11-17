@@ -44,14 +44,13 @@ const renderChart = () => {
   destroyChart();
 
   chartInstance = new Chart(canvasRef.value, {
-    type: 'line',
+    type: 'bar',
     data: {
       labels: props.labels,
       datasets: props.datasets.map((dataset) => ({
         borderWidth: 2,
         pointRadius: 3,
         pointHoverRadius: 4,
-        fill: true,
         ...dataset,
       })),
     },

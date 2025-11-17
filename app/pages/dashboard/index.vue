@@ -13,10 +13,20 @@
             class="h-11 rounded-2xl border border-border bg-transparent px-4 text-sm"
             aria-label="Select report month"
           />
+          <select
+            v-model="exportFormat"
+            class="h-11 rounded-2xl border border-border bg-transparent px-4 text-sm"
+            aria-label="Select export format"
+          >
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="pdf">PDF</option>
+            <option value="json">JSON</option>
+          </select>
           <button
             class="btn-secondary h-11 px-5 text-sm font-semibold"
             :disabled="exporting"
-            @click="exportMonthlyReport"
+            @click="handleExport"
           >
             <span v-if="exporting">Exporting…</span>
             <span v-else>Download Report</span>
@@ -32,11 +42,13 @@
       {{ summaryError }}
     </div>
 
-    <section class="toolbar-grid">
+    <section
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
       <article
         v-for="highlight in highlightCards"
         :key="highlight.label"
-        class="card-surface border border-border p-5"
+        class="card-surface border border-border p-5 rounded-2xl shadow-md"
       >
         <p class="text-xs uppercase text-foreground-muted">
           {{ highlight.label }}
@@ -54,8 +66,10 @@
       </article>
     </section>
 
-    <section class="grid gap-6 xl:grid-cols-3">
-      <article class="card-surface border border-border p-6 xl:col-span-2">
+    <section class="grid gap-6">
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
         <header class="mb-6 flex flex-wrap items-center gap-4">
           <div>
             <p class="text-xs uppercase text-foreground-muted">Weekly Trend</p>
@@ -107,24 +121,12 @@
           </div>
         </div>
       </article>
-
-      <NotificationCenter
-        :notifications="notifications"
-        :loading="notificationsLoading"
-        :error="notificationsError"
-        :selected-ids="selectedIds"
-        :unread-count="unreadCount"
-        :priority-counts="priorityCounts"
-        @refresh="fetchNotifications"
-        @toggle-select="toggleSelection"
-        @mark-selected="markSelectedAsRead"
-        @mark-all="markAllAsRead"
-        @mark-single="markNotificationAsRead"
-      />
     </section>
 
     <section class="grid gap-6 lg:grid-cols-2">
-      <article class="card-surface border border-border p-6">
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
         <header class="flex items-center justify-between">
           <div>
             <p class="text-xs uppercase text-foreground-muted">Daily Capture</p>
@@ -158,7 +160,9 @@
         </div>
       </article>
 
-      <article class="card-surface border border-border p-6">
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
         <header class="flex items-center justify-between">
           <div>
             <p class="text-xs uppercase text-foreground-muted">System Alerts</p>
@@ -194,7 +198,8 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import type { ExportFormat } from '~/composables/useDashboard';
 
 const {
   summaryError,
@@ -212,19 +217,15 @@ const {
   exportMonthlyReport,
 } = useDashboard();
 
-const {
-  notifications,
-  loading: notificationsLoading,
-  error: notificationsError,
-  unreadCount,
-  priorityCounts,
-  selectedIds,
-  toggleSelection,
-  fetchNotifications,
-  markSelectedAsRead,
-  markAllAsRead,
-  markNotificationAsRead,
-} = useNotificationCenter();
+const exportFormat = ref<ExportFormat>('excel');
+
+const handleExport = () => {
+  if (exporting.value) {
+    return;
+  }
+
+  void exportMonthlyReport(exportFormat.value);
+};
 
 watch(reportMonth, () => {
   loadMonthlyReport();

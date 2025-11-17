@@ -32,6 +32,8 @@ export type MonthlyAttendanceReport = {
   daily_totals: Record<string, number>;
 };
 
+export type ExportFormat = 'excel' | 'csv' | 'pdf' | 'json';
+
 export const useDashboard = () => {
   const api = useApi();
 
@@ -90,27 +92,47 @@ export const useDashboard = () => {
     await Promise.all([loadSummary(), loadMonthlyReport()]);
   };
 
-  const exportMonthlyReport = async () => {
+  const formatMeta: Record<ExportFormat, { ext: string; mime: string }> = {
+    excel: {
+      ext: 'xlsx',
+      mime: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    },
+    csv: {
+      ext: 'csv',
+      mime: 'text/csv;charset=utf-8',
+    },
+    pdf: {
+      ext: 'pdf',
+      mime: 'application/pdf',
+    },
+    json: {
+      ext: 'json',
+      mime: 'application/json',
+    },
+  };
+
+  const exportMonthlyReport = async (format: ExportFormat = 'excel') => {
     exporting.value = true;
     exportError.value = null;
 
     try {
       const response = await api.get('/reports/attendance/monthly', {
-        params: { month: reportMonth.value, format: 'csv' },
+        params: { month: reportMonth.value, format },
         responseType: 'blob',
       });
 
+      const meta = formatMeta[format] ?? formatMeta.excel;
       const blob = new Blob([response.data], {
         type:
           (response.headers?.['content-type'] as string | undefined) ??
-          'text/csv;charset=utf-8',
+          meta.mime,
       });
 
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       const targetMonth = reportMonth.value.replace(/-/g, '_');
-      link.download = `attendance_report_${targetMonth}.csv`;
+      link.download = `attendance_report_${targetMonth}.${meta.ext}`;
       document.body.appendChild(link);
       link.click();
       link.remove();
