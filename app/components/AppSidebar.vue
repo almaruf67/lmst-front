@@ -2,7 +2,7 @@
   <aside
     v-show="isDesktop"
     :class="[
-      'h-screen border-r border-border bg-card text-sm font-medium text-foreground transition-all duration-300',
+      'sticky top-0 h-screen self-start border-r border-border bg-card text-sm font-medium text-foreground transition-all duration-300 flex flex-col',
       collapsed ? 'w-20' : 'w-72',
     ]"
   >
@@ -23,7 +23,7 @@
       </NuxtLink>
     </div>
 
-    <nav class="mt-4 flex-1 space-y-1.5 px-2.5 lg:px-3">
+    <nav class="mt-4 flex-1 space-y-1.5 overflow-y-auto px-2.5 lg:px-3">
       <button
         v-for="item in navItems"
         :key="item.to"
@@ -44,12 +44,22 @@
 </template>
 
 <script lang="ts" setup>
-import { sidebarNavItems } from './sidebarItems';
+import { computed } from 'vue';
+import { storeToRefs } from 'pinia';
+
+import { resolveSidebarNavItems } from './sidebarItems';
+import { useAuthStore } from '~/stores/auth';
 
 defineProps<{ collapsed: boolean; isDesktop: boolean }>();
 defineEmits<{ (e: 'toggle'): void }>();
 
-const navItems = sidebarNavItems;
+const authStore = useAuthStore();
+const { profile } = storeToRefs(authStore);
+
+const navItems = computed(() =>
+  resolveSidebarNavItems(profile.value?.user_type ?? null)
+);
+
 const router = useRouter();
 const route = useRoute();
 
