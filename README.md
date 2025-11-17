@@ -18,13 +18,25 @@ pnpm lint          # ESLint
 pnpm lint:fix      # ESLint with --fix
 pnpm typecheck     # vue-tsc (SFC type checks)
 pnpm type-check    # tsc (TS project only)
+pnpm test          # Vitest component/composable suite
+pnpm test:watch    # Vitest watch mode
 pnpm format        # Prettier write
 pnpm format:check  # Prettier check
 ```
 
+## Core Dev Commands
+
+- `pnpm dev` – hot-reload dev server on port 3009.
+- `pnpm preview` – serve the production build locally for smoke testing.
+- `pnpm lint` – run ESLint using the repo config.
+- `pnpm typecheck` – execute `vue-tsc` to validate SFC types before commits.
+- `pnpm test` – run the Vitest-powered component suite so regressions are caught before wiring up APIs.
+
 ## Runtime Config
 
-- Env var: `NUXT_PUBLIC_API_BASE` (default: `http://localhost:8000/api/v1`)
+- `NUXT_PUBLIC_API_BASE` – REST endpoint root (default `http://localhost:8000/api/v1`).
+- `NUXT_PUBLIC_ASSET_BASE` – Absolute origin for media/assets served outside `/api` (default `http://localhost:8000`).
+- `NUXT_PUBLIC_WS_URL` – Websocket/Reverb endpoint placeholder (default `ws://localhost:6001`).
 - Example:
   ```ts
   const {
@@ -32,6 +44,38 @@ pnpm format:check  # Prettier check
   } = useRuntimeConfig();
   const { data } = await axios.get(`${apiBase}/students`);
   ```
+
+## Environment & Shell Checklist
+
+- Create a `.env` file and set `NUXT_PUBLIC_API_BASE`, `NUXT_PUBLIC_ASSET_BASE`, and `NUXT_PUBLIC_WS_URL` for your environment (defaults provided in `.env`).
+- Tailwind entry lives at `app/assets/css/main.css` with the design tokens that power the UI kit.
+- The app shell is defined inside `app/layouts/default.vue`, which wires the sidebar, header, and page container used by every view.
+
+### Example `.env`
+
+Copy the snippet below into `.env` (or `.env.local`) and tweak the origins/ports to match your backend stack. These values line up with the defaults baked into `nuxt.config.ts`.
+
+```env
+# Core REST + assets
+NUXT_PUBLIC_API_BASE=http://localhost:8000/api/v1
+NUXT_PUBLIC_ASSET_BASE=http://localhost:8000
+
+# Realtime + broadcasting
+NUXT_PUBLIC_WS_URL=ws://localhost:6001
+NUXT_PUBLIC_BROADCAST_AUTH_ENDPOINT=http://localhost:8000/api/broadcasting/auth
+NUXT_PUBLIC_REVERB_HOST=127.0.0.1
+NUXT_PUBLIC_REVERB_PORT=8080
+NUXT_PUBLIC_REVERB_WSS_PORT=443
+NUXT_PUBLIC_REVERB_KEY=local-key
+NUXT_PUBLIC_REVERB_SCHEME=http
+NUXT_PUBLIC_REVERB_WS_PATH=
+```
+
+## Shared Infrastructure
+
+- Axios is configured globally via `app/plugins/api.ts`; consume it through the `useApi()` composable so headers, retries, and auth handling stay consistent.
+- Authenticated requests automatically attach the bearer token, retry once after refresh, and redirect to `/login` when the session expires.
+- All fatal/network errors surface through the Pinia notification store (`app/stores/notifications.ts`), giving the UI a single toast pipeline to subscribe to.
 
 ## Project Structure
 
@@ -42,14 +86,6 @@ pnpm format:check  # Prettier check
 - `app/stores/**` (Pinia stores)
 - `app/plugins/**` (client/server plugins)
 - `app/assets/**` (Tailwind entry at `assets/css/main.css`)
-
-## 3–5 Hour Frontend Plan (API last)
-
-1. Shell (15m): ensure Tailwind `app/assets/css/main.css`; minimal layout in `app/layouts/default.vue`.
-2. Students (45–60m): `app/pages/students/index.vue` + `useStudents()` + mock service + client pagination.
-3. Attendance (60–75m): `app/pages/attendance/index.vue` + Pinia store for bulk state + percentage calc.
-4. Dashboard (30–45m): `app/pages/dashboard/index.vue` + simple cards + basic chart.
-5. API swap (30–45m): replace mocks with axios using `apiBase`; add basic error toasts.
 
 ### Suggested Files
 

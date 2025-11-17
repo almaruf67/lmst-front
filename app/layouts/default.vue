@@ -12,6 +12,7 @@
         :color-mode="colorMode"
         @toggle-sidebar="toggleSidebar"
         @toggle-theme="toggleTheme"
+        @logout="handleLogout"
       />
       <main class="flex-1 overflow-y-auto bg-surface px-4 py-6 lg:px-8 lg:py-8">
         <div class="mx-auto max-w-7xl">
@@ -23,25 +24,39 @@
 </template>
 
 <script lang="ts" setup>
+import { useAuth } from '~/composables/useAuth';
+
 const isSidebarCollapsed = ref(true);
 const isMobileSidebarOpen = ref(false);
 const colorMode = useState<'light' | 'dark'>('color-mode', () => 'light');
 const isDesktop = ref(true);
+const { logout } = useAuth();
 
 const updateIsDesktop = () => {
-  if (!process.client) return;
+  if (!import.meta.client) {
+    return;
+  }
+
   isDesktop.value = window.matchMedia('(min-width: 1024px)').matches;
 };
 
-if (process.client) {
+if (import.meta.client) {
   updateIsDesktop();
 }
 
 onMounted(() => {
+  if (!import.meta.client) {
+    return;
+  }
+
   window.addEventListener('resize', updateIsDesktop);
 });
 
 onBeforeUnmount(() => {
+  if (!import.meta.client) {
+    return;
+  }
+
   window.removeEventListener('resize', updateIsDesktop);
 });
 
@@ -67,5 +82,9 @@ const closeMobileSidebar = () => {
 
 const toggleTheme = () => {
   colorMode.value = colorMode.value === 'light' ? 'dark' : 'light';
+};
+
+const handleLogout = async () => {
+  await logout();
 };
 </script>

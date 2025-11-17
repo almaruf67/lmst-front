@@ -1,92 +1,282 @@
 <template>
-    <div class="space-y-6">
-        <PageToolbar eyebrow="Overview" title="Attendance Overview"
-            description="Snapshot of today’s attendance health before connecting to the live API.">
-            <template #actions>
-                <button class="h-11 rounded-2xl border border-(--color-border) px-5 text-sm font-semibold">
-                    Download Report
-                </button>
-            </template>
-        </PageToolbar>
+  <div class="space-y-6">
+    <PageToolbar
+      eyebrow="Overview"
+      title="Attendance Overview"
+      description="Live insight into today’s attendance health and urgent actions."
+    >
+      <template #actions>
+        <div class="flex items-center gap-3">
+          <input
+            v-model="reportMonth"
+            type="month"
+            class="h-11 rounded-2xl border border-border bg-transparent px-4 text-sm"
+            aria-label="Select report month"
+          />
+          <select
+            v-model="exportFormat"
+            class="h-11 rounded-2xl border border-border bg-transparent px-4 text-sm"
+            aria-label="Select export format"
+          >
+            <option value="excel">Excel</option>
+            <option value="csv">CSV</option>
+            <option value="pdf">PDF</option>
+            <option value="json">JSON</option>
+          </select>
+          <button
+            class="btn-secondary h-11 px-5 text-sm font-semibold"
+            :disabled="exporting"
+            @click="handleExport"
+          >
+            <span v-if="exporting">Exporting…</span>
+            <span v-else>Download Report</span>
+          </button>
+        </div>
+      </template>
+    </PageToolbar>
 
-        <section class="toolbar-grid">
-            <article v-for="highlight in highlightCards" :key="highlight.label"
-                class="card-surface border border-(--color-border) p-5">
-                <p class="text-xs uppercase text-(--color-foreground-muted)">{{ highlight.label }}</p>
-                <p class="text-3xl font-semibold">{{ highlight.value }}</p>
-                <p class="text-xs text-(--color-foreground-muted)">{{ highlight.subtext }}</p>
-            </article>
-        </section>
-
-        <section class="grid gap-6 lg:grid-cols-3">
-            <article class="card-surface border border-(--color-border) p-6 lg:col-span-2">
-                <header class="mb-4 flex items-center justify-between">
-                    <div>
-                        <p class="text-xs uppercase text-(--color-foreground-muted)">Monthly Attendance</p>
-                        <h3 class="text-xl font-semibold">{{ currentMonth }}</h3>
-                    </div>
-                    <button class="rounded-full border border-(--color-border) px-4 py-1 text-sm">Export</button>
-                </header>
-                <div class="space-y-4">
-                    <div v-for="point in monthlyTrend" :key="point.label" class="flex items-center gap-4">
-                        <div class="w-14 text-sm text-(--color-foreground-muted)">{{ point.label }}</div>
-                        <div class="h-3 flex-1 rounded-full bg-(--color-surface-muted)">
-                            <div class="h-3 rounded-full bg-(--color-primary)" :style="{ width: `${point.present}%` }">
-                            </div>
-                        </div>
-                        <div class="w-12 text-right text-sm font-semibold">{{ point.present }}%</div>
-                    </div>
-                </div>
-            </article>
-
-            <article class="card-surface border border-(--color-border) p-6">
-                <h3 class="text-lg font-semibold">Upcoming Tasks</h3>
-                <ul class="mt-4 space-y-3 text-sm">
-                    <li v-for="task in tasks" :key="task">
-                        <div
-                            class="flex items-center justify-between rounded-2xl border border-(--color-border) px-3 py-2">
-                            <span>{{ task }}</span>
-                            <span class="text-xs text-(--color-foreground-muted)">Later</span>
-                        </div>
-                    </li>
-                </ul>
-            </article>
-        </section>
+    <div
+      v-if="summaryError"
+      class="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
+      {{ summaryError }}
     </div>
+
+    <section
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+    >
+      <article
+        v-for="highlight in highlightCards"
+        :key="highlight.label"
+        class="card-surface border border-border p-5 rounded-2xl shadow-md"
+      >
+        <p class="text-xs uppercase text-foreground-muted">
+          {{ highlight.label }}
+        </p>
+        <p class="text-3xl font-semibold">
+          <span
+            v-if="summaryLoading"
+            class="inline-block animate-pulse rounded-full bg-surface-muted px-6 py-3"
+          />
+          <span v-else>{{ highlight.value }}</span>
+        </p>
+        <p class="text-xs text-foreground-muted">
+          {{ highlight.subtext }}
+        </p>
+      </article>
+    </section>
+
+    <section class="grid gap-6">
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
+        <header class="mb-6 flex flex-wrap items-center gap-4">
+          <div>
+            <p class="text-xs uppercase text-foreground-muted">Weekly Trend</p>
+            <h3 class="text-xl font-semibold">{{ formattedReportMonth }}</h3>
+          </div>
+          <div
+            class="ml-auto flex items-center gap-3 text-xs text-foreground-muted"
+          >
+            <span class="flex items-center gap-1">
+              <span class="h-3 w-3 rounded-full bg-primary" /> Present
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="h-3 w-3 rounded-full bg-amber-500" /> Late
+            </span>
+            <span class="flex items-center gap-1">
+              <span class="h-3 w-3 rounded-full bg-rose-500" /> Absent
+            </span>
+          </div>
+        </header>
+
+        <AttendanceTrendChart
+          :labels="weeklyChart.labels"
+          :datasets="weeklyChart.datasets"
+          :loading="summaryLoading"
+        />
+
+        <div class="mt-6 grid gap-4 md:grid-cols-2">
+          <div
+            v-for="status in monthlyStatusBreakdown"
+            :key="status.label"
+            class="rounded-2xl border border-border p-4"
+          >
+            <div
+              class="flex items-center justify-between text-sm font-semibold"
+            >
+              <span>{{ status.label }}</span>
+              <span>{{ status.value }}</span>
+            </div>
+            <div class="mt-3 h-2 rounded-full bg-surface-muted">
+              <div
+                class="h-2 rounded-full"
+                :class="statusColor(status.label)"
+                :style="{ width: `${status.percentage}%` }"
+              />
+            </div>
+            <p class="mt-2 text-xs text-foreground-muted">
+              {{ status.percentage }}% of records
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid gap-6 lg:grid-cols-2">
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
+        <header class="flex items-center justify-between">
+          <div>
+            <p class="text-xs uppercase text-foreground-muted">Daily Capture</p>
+            <h3 class="text-xl font-semibold">{{ formattedReportMonth }}</h3>
+          </div>
+          <span class="text-sm text-foreground-muted">
+            {{ monthlyTotalsList.length }} days tracked
+          </span>
+        </header>
+        <div class="mt-6 space-y-3">
+          <div
+            v-for="entry in monthlyTotalsList"
+            :key="entry.date"
+            class="flex items-center gap-4 rounded-2xl border border-border px-4 py-3"
+          >
+            <div class="w-24 text-sm font-semibold">
+              {{ formatDate(entry.date) }}
+            </div>
+            <div class="flex-1">
+              <div class="h-2 rounded-full bg-surface-muted">
+                <div
+                  class="h-2 rounded-full bg-primary"
+                  :style="{ width: `${entry.percentage}%` }"
+                />
+              </div>
+            </div>
+            <div class="w-16 text-right text-sm font-semibold">
+              {{ entry.total }}
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article
+        class="card-surface border border-border p-6 rounded-2xl shadow-md"
+      >
+        <header class="flex items-center justify-between">
+          <div>
+            <p class="text-xs uppercase text-foreground-muted">System Alerts</p>
+            <h3 class="text-xl font-semibold">Latest Failures</h3>
+          </div>
+          <button
+            class="text-sm font-semibold text-primary"
+            type="button"
+            @click="refreshAll"
+          >
+            Refresh
+          </button>
+        </header>
+        <p class="mt-4 text-sm text-foreground-muted">
+          Hook into backend `AttendanceRecordedNotification` streams. Alerts
+          roll into the notification center and emit toasts globally.
+        </p>
+        <div
+          v-if="reportError"
+          class="mt-4 rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+        >
+          {{ reportError }}
+        </div>
+        <div
+          v-if="exportError"
+          class="mt-4 rounded-2xl border border-amber-600/40 bg-amber-100 px-4 py-3 text-sm text-amber-900"
+        >
+          {{ exportError }}
+        </div>
+      </article>
+    </section>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { listMockAttendance } from '~/utils/mock/attendance'
-import { listMockStudents } from '~/utils/mock/students'
+import { computed, ref, watch } from 'vue';
+import type { ExportFormat } from '~/composables/useDashboard';
 
-const highlightCards = ref([
-    { label: 'Students', value: 0, subtext: 'Active across all classes' },
-    { label: 'Present Today', value: 0, subtext: 'Marked as present' },
-    { label: 'Late', value: 0, subtext: 'Need follow-up' },
-    { label: 'Absent', value: 0, subtext: 'Notify guardians' }
-])
+const {
+  summaryError,
+  summaryLoading,
+  highlightCards,
+  weeklyChart,
+  monthlyStatusBreakdown,
+  monthlyTotals,
+  reportMonth,
+  reportError,
+  exporting,
+  exportError,
+  refreshAll,
+  loadMonthlyReport,
+  exportMonthlyReport,
+} = useDashboard();
 
-const monthlyTrend = ref<{ label: string; present: number }[]>([])
-const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' })
+const exportFormat = ref<ExportFormat>('excel');
 
-const tasks = ['Sync LMS data', 'Review absent list', 'Publish monthly report']
+const handleExport = () => {
+  if (exporting.value) {
+    return;
+  }
 
-onMounted(async () => {
-    const [students, attendance] = await Promise.all([listMockStudents(), listMockAttendance()])
-    highlightCards.value = [
-        { label: 'Students', value: students.length, subtext: 'Active across all classes' },
-        { label: 'Present Today', value: attendance.filter((r) => r.status === 'present').length, subtext: 'Marked as present' },
-        { label: 'Late', value: attendance.filter((r) => r.status === 'late').length, subtext: 'Need follow-up' },
-        { label: 'Absent', value: attendance.filter((r) => r.status === 'absent').length, subtext: 'Notify guardians' }
-    ]
+  void exportMonthlyReport(exportFormat.value);
+};
 
-    monthlyTrend.value = Array.from({ length: 6 }).map((_, index) => {
-        const label = new Date(new Date().setMonth(new Date().getMonth() - (5 - index)))
-            .toLocaleString('default', { month: 'short' })
-        return {
-            label,
-            present: 60 + Math.round(Math.random() * 35)
-        }
-    })
-})
+watch(reportMonth, () => {
+  loadMonthlyReport();
+});
+
+const formattedReportMonth = computed(() => {
+  const date = new Date(`${reportMonth.value}-01T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return reportMonth.value;
+  }
+
+  return date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+});
+
+const monthlyTotalsList = computed(() => {
+  const entries = Object.entries(monthlyTotals.value);
+  const totalMax = Math.max(...entries.map(([, total]) => Number(total)), 1);
+
+  return entries
+    .map(([date, total]) => ({
+      date,
+      total: Number(total),
+      percentage: Math.round((Number(total) / totalMax) * 100),
+    }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+});
+
+const statusColor = (label: string) => {
+  const normalized = label.toLowerCase();
+
+  if (normalized.startsWith('present')) {
+    return 'bg-primary';
+  }
+
+  if (normalized.startsWith('late')) {
+    return 'bg-amber-500';
+  }
+
+  if (normalized.startsWith('absent')) {
+    return 'bg-rose-500';
+  }
+
+  return 'bg-blue-500';
+};
+
+const formatDate = (input: string) => {
+  const date = new Date(`${input}T00:00:00`);
+  if (Number.isNaN(date.getTime())) {
+    return input;
+  }
+
+  return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+};
 </script>

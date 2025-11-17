@@ -9,93 +9,167 @@
         >
           <tr>
             <th class="px-6 py-4">Student</th>
-            <th class="px-6 py-4">Class</th>
-            <th class="px-6 py-4">Section</th>
-            <th class="px-6 py-4">Attendance</th>
-            <th class="px-6 py-4">Status</th>
+            <th v-if="columns.studentId" class="px-6 py-4">Student ID</th>
+            <th v-if="columns.classSection" class="px-6 py-4">
+              Class / Section
+            </th>
+            <th v-if="columns.primaryTeacher" class="px-6 py-4">
+              Primary Teacher
+            </th>
+            <th v-if="columns.lastUpdated" class="px-6 py-4">Last Updated</th>
             <th class="px-6 py-4 text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-border text-sm">
-          <tr
-            v-for="student in students"
-            :key="student.id"
-            class="hover:bg-surface-muted transition-colors duration-150"
-          >
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-bold text-white"
-                  :style="{ backgroundColor: student.avatarColor }"
-                >
-                  {{ student.initials }}
+          <template v-if="loading">
+            <tr
+              v-for="index in 6"
+              :key="`skeleton-${index}`"
+              class="animate-pulse"
+            >
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="h-10 w-10 rounded-full bg-surface-muted" />
+                  <div class="space-y-2">
+                    <div class="h-3 w-32 rounded-full bg-surface-muted" />
+                    <div class="h-2 w-20 rounded-full bg-surface-muted" />
+                  </div>
                 </div>
-                <div>
-                  <p class="font-semibold text-foreground">
-                    {{ student.name }}
-                  </p>
-                  <p class="text-xs text-foreground-muted">
-                    {{ student.studentId }}
-                  </p>
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-3 w-24 rounded-full bg-surface-muted" />
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-3 w-20 rounded-full bg-surface-muted" />
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-3 w-28 rounded-full bg-surface-muted" />
+              </td>
+              <td class="px-6 py-4">
+                <div class="h-3 w-24 rounded-full bg-surface-muted" />
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="ml-auto h-8 w-16 rounded-full bg-surface-muted" />
+              </td>
+            </tr>
+          </template>
+          <template v-else>
+            <tr
+              v-for="student in students"
+              :key="student.id"
+              class="hover:bg-surface-muted transition-colors duration-150"
+            >
+              <td class="px-6 py-4">
+                <div class="flex items-center gap-3">
+                  <div class="relative h-10 w-10">
+                    <img
+                      v-if="student.photoUrl"
+                      :src="student.photoUrl"
+                      :alt="student.name"
+                      class="h-10 w-10 rounded-full object-cover ring-2 ring-surface"
+                    />
+                    <div
+                      v-else
+                      class="flex h-10 w-10 items-center justify-center rounded-full text-xs font-semibold text-white"
+                      :style="{ backgroundColor: student.accentColor }"
+                    >
+                      {{ student.initials }}
+                    </div>
+                  </div>
+                  <div>
+                    <p class="font-semibold text-foreground">
+                      {{ student.name }}
+                    </p>
+                    <p class="text-xs text-foreground-muted">
+                      Updated {{ formatRelative(student.updatedAt) }}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </td>
-            <td class="px-6 py-4 font-medium text-foreground">
-              {{ student.className }}
-            </td>
-            <td class="px-6 py-4 text-foreground-muted">
-              {{ student.section }}
-            </td>
-            <td class="px-6 py-4">
-              <div class="flex items-center gap-3">
-                <div
-                  class="h-2 w-20 rounded-full bg-surface-muted overflow-hidden"
-                >
-                  <div
-                    class="h-2 rounded-full bg-primary"
-                    :style="{ width: `${student.attendancePercentage}%` }"
-                  />
+              </td>
+              <td
+                v-if="columns.studentId"
+                class="px-6 py-4 font-mono text-sm text-foreground"
+              >
+                {{ student.studentCode }}
+              </td>
+              <td v-if="columns.classSection" class="px-6 py-4">
+                <p class="font-medium text-foreground">
+                  {{ student.className ? `Class ${student.className}` : '—' }}
+                </p>
+                <p class="text-xs text-foreground-muted">
+                  {{
+                    student.section
+                      ? `Section ${student.section}`
+                      : 'Unassigned'
+                  }}
+                </p>
+              </td>
+              <td
+                v-if="columns.primaryTeacher"
+                class="px-6 py-4 text-foreground"
+              >
+                {{ student.primaryTeacher ?? 'Not assigned' }}
+              </td>
+              <td
+                v-if="columns.lastUpdated"
+                class="px-6 py-4 text-foreground-muted"
+              >
+                {{ formatAbsolute(student.updatedAt) }}
+              </td>
+              <td class="px-6 py-4 text-right">
+                <div class="inline-flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    class="btn-secondary px-3 py-1.5 text-xs"
+                    :disabled="actionBusy"
+                    @click="handleEdit(student)"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    class="btn-secondary px-3 py-1.5 text-xs text-destructive"
+                    :disabled="actionBusy"
+                    @click="handleDelete(student)"
+                  >
+                    Delete
+                  </button>
                 </div>
-                <span class="font-medium text-foreground w-12"
-                  >{{ student.attendancePercentage }}%</span
-                >
-              </div>
-            </td>
-            <td class="px-6 py-4">
-              <span :class="statusBadgeClass(student.status)">
-                {{ student.status }}
-              </span>
-            </td>
-            <td class="px-6 py-4 text-right">
-              <button class="btn-secondary text-xs px-3 py-1.5">View</button>
-            </td>
-          </tr>
-          <tr v-if="students.length === 0">
-            <td colspan="6" class="px-6 py-8 text-center text-foreground-muted">
-              No students found
-            </td>
-          </tr>
+              </td>
+            </tr>
+            <tr v-if="students.length === 0">
+              <td
+                colspan="6"
+                class="px-6 py-8 text-center text-foreground-muted"
+              >
+                No students found
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </div>
 
     <footer
-      class="flex items-center justify-between border-t border-border bg-surface-muted px-6 py-3 text-sm"
+      class="flex flex-wrap items-center gap-4 border-t border-border bg-surface-muted px-6 py-3 text-sm"
     >
-      <span class="text-foreground-muted"
-        >Page {{ page }} · Showing {{ students.length }} of {{ total }}</span
-      >
-      <div class="flex items-center gap-2">
+      <span class="text-foreground-muted">
+        <template v-if="total > 0">
+          Showing {{ rangeStart }}-{{ rangeEnd }} of {{ total }}
+        </template>
+        <template v-else> Waiting for records… </template>
+      </span>
+      <div class="flex flex-1 items-center justify-end gap-2">
         <button
           class="btn-secondary text-xs px-3 py-1.5"
-          :disabled="page === 1"
+          :disabled="page === 1 || loading"
           @click="changePage(page - 1)"
         >
           ← Prev
         </button>
         <button
           class="btn-secondary text-xs px-3 py-1.5"
-          :disabled="page === totalPages"
+          :disabled="page >= totalPages || loading"
           @click="changePage(page + 1)"
         >
           Next →
@@ -106,37 +180,117 @@
 </template>
 
 <script lang="ts" setup>
-type StudentItem = {
-  id: number;
-  name: string;
-  initials: string;
-  studentId: string;
-  className: string;
-  section: string;
-  attendancePercentage: number;
-  status: 'Present' | 'Absent' | 'Late';
-  avatarColor: string;
-};
+import type { StudentListItem } from '~/composables/useStudents';
 
 const props = defineProps<{
-  students: StudentItem[];
+  students: StudentListItem[];
   total: number;
   page: number;
   pageSize: number;
+  loading?: boolean;
+  actionLoading?: boolean;
+  columns?: {
+    studentId: boolean;
+    classSection: boolean;
+    primaryTeacher: boolean;
+    lastUpdated: boolean;
+  };
 }>();
-const emit = defineEmits<{ (e: 'change-page', page: number): void }>();
+const emit = defineEmits<{
+  (e: 'change-page', page: number): void;
+  (e: 'edit-student', student: StudentListItem): void;
+  (e: 'delete-student', student: StudentListItem): void;
+}>();
+
+const loading = computed(() => props.loading ?? false);
+
+const columns = computed(
+  () =>
+    props.columns ?? {
+      studentId: true,
+      classSection: true,
+      primaryTeacher: true,
+      lastUpdated: true,
+    }
+);
+
+const actionBusy = computed(
+  () => loading.value || Boolean(props.actionLoading)
+);
 
 const totalPages = computed(() =>
   Math.max(1, Math.ceil(props.total / props.pageSize))
 );
+const rangeStart = computed(() => {
+  if (!props.total) {
+    return 0;
+  }
+  return (props.page - 1) * props.pageSize + 1;
+});
+const rangeEnd = computed(() => {
+  if (!props.total) {
+    return 0;
+  }
+  return Math.min(props.page * props.pageSize, props.total);
+});
 
-const statusBadgeClass = (status: StudentItem['status']) => {
-  if (status === 'Present') return 'badge-success';
-  if (status === 'Late') return 'badge-warning';
-  return 'badge-danger';
+const relativeFormatter = new Intl.RelativeTimeFormat(undefined, {
+  numeric: 'auto',
+});
+const absoluteFormatter = new Intl.DateTimeFormat(undefined, {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
+const formatRelative = (value: string | null) => {
+  if (!value) {
+    return 'recently';
+  }
+
+  const updated = new Date(value).getTime();
+  if (Number.isNaN(updated)) {
+    return 'recently';
+  }
+
+  const diffMs = updated - Date.now();
+  const diffMinutes = Math.round(diffMs / (1000 * 60));
+
+  if (Math.abs(diffMinutes) < 60) {
+    return relativeFormatter.format(diffMinutes, 'minute');
+  }
+
+  const diffHours = Math.round(diffMinutes / 60);
+  if (Math.abs(diffHours) < 24) {
+    return relativeFormatter.format(diffHours, 'hour');
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return relativeFormatter.format(diffDays, 'day');
+};
+
+const formatAbsolute = (value: string | null) => {
+  if (!value) {
+    return '—';
+  }
+
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return '—';
+  }
+
+  return absoluteFormatter.format(parsed);
 };
 
 const changePage = (next: number) => {
-  emit('change-page', Math.min(Math.max(next, 1), totalPages.value));
+  const safePage = Math.min(Math.max(next, 1), totalPages.value);
+  emit('change-page', safePage);
+};
+
+const handleEdit = (student: StudentListItem) => {
+  emit('edit-student', student);
+};
+
+const handleDelete = (student: StudentListItem) => {
+  emit('delete-student', student);
 };
 </script>
